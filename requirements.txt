@@ -1,0 +1,6 @@
+pillow
+numpy
+scipy
+requests
+edge-tts
+imageio-ffmpeg

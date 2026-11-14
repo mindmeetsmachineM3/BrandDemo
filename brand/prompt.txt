@@ -1,0 +1,15 @@
+EXAMPLE BRIEF (fictional brand). Replace everything below with your client's details, in plain words.
+
+Brand: Acme Paints. Instagram: @acmepaints. WhatsApp: +91 00000 00000.
+Tagline: "Colour your home with confidence."
+We sell interior wall paint and waterproof coating for walls and terraces to home owners and painters in Indian cities.
+Tone: warm, simple, helpful, short sentences. Write in English.
+
+Products (images are in assets/products):
+- Acme Wall Paint (wall_paint.png): smooth finish, easy to apply, wide choice of shades.
+- Acme Waterproof Coat (waterproof.png): helps protect walls and terraces against seepage, easy to apply, long-lasting coverage.
+
+Offers: none right now. Do not mention any price or discount.
+Season: Diwali home makeover.
+Special request: mention that shade advice is available on WhatsApp.
+Do not use: cartoon characters, public figures, religious figures for selling.

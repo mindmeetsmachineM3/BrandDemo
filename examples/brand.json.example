@@ -1,0 +1,56 @@
+{
+ "_help": "EXAMPLE BRAND (fictional). Replace every value with the real client's details. Delete this line when done.",
+ "name": "Acme Paints",
+ "handle": "acmepaints",
+ "phone": "+91 00000 00000",
+ "tagline": "Colour your home with confidence.",
+ "language": "english",
+ "industry": "Home paints",
+ "audience": "Home owners and painters in Indian cities",
+ "tone": "Warm, simple and helpful. Short sentences.",
+ "colors": {
+  "primary": "#1F6FEB",
+  "secondary": "#FFC83D",
+  "dark": "#101828",
+  "light": "#F7F8FA"
+ },
+ "post_ratio": "4:5",
+ "products": [
+  {
+   "id": "wall_paint",
+   "name": "Acme Wall Paint",
+   "image": "wall_paint.png",
+   "description": "Interior wall paint for smooth, even colour",
+   "usps": [
+    "Smooth finish",
+    "Easy to apply",
+    "Wide choice of shades"
+   ]
+  },
+  {
+   "id": "waterproof",
+   "name": "Acme Waterproof Coat",
+   "image": "waterproof.png",
+   "description": "Waterproof coating for walls and terraces",
+   "usps": [
+    "Helps protect against seepage",
+    "Easy to apply",
+    "Long-lasting coverage"
+   ]
+  }
+ ],
+ "offers": [],
+ "dates": [
+  "Diwali home makeover season"
+ ],
+ "do": [
+  "Use only the real product images",
+  "Keep sentences short"
+ ],
+ "dont": [
+  "No cartoon or film characters",
+  "No public figures",
+  "No discount or price unless listed under offers"
+ ],
+ "extra_prompt": "Mention that shade advice is available on WhatsApp."
+}
