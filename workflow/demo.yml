@@ -1,0 +1,55 @@
+name: Build brand demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      brand:
+        description: "Brand folder (brand, or brands/<name> if you keep several brands in this repo)"
+        default: brand
+        required: true
+      voice:
+        description: "Reel voice"
+        type: choice
+        default: none
+        options: [none, edge, elevenlabs]
+      offline:
+        description: "Skip the AI (use hand-written or template copy)"
+        type: boolean
+        default: false
+      no_reel:
+        description: "Skip the Reel (faster)"
+        type: boolean
+        default: false
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+      - name: Make sure ffmpeg exists (no apt needed)
+        run: |
+          which ffmpeg || sudo ln -sf "$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')" /usr/local/bin/ffmpeg
+          ffmpeg -version | head -1
+      - name: Check the brand folder
+        run: python demo.py check --brand "${{ inputs.brand }}"
+      - name: Build demo
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ELEVEN_API_KEY: ${{ secrets.ELEVEN_API_KEY }}
+          ELEVEN_VOICE: ${{ secrets.ELEVEN_VOICE }}
+        run: |
+          ARGS=""
+          [ "${{ inputs.offline }}" = "true" ] && ARGS="$ARGS --offline"
+          [ "${{ inputs.no_reel }}" = "true" ] && ARGS="$ARGS --no-reel"
+          python demo.py build --brand "${{ inputs.brand }}" --voice "${{ inputs.voice }}" $ARGS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brand-demo
+          path: output/*.zip
+          retention-days: 14
