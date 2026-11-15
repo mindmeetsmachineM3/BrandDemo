@@ -19,7 +19,7 @@ SCHEMA = """{
  "carousel":{"cover":{"punch":"max 6 words","highlight":"1-2 words from punch","products":["id"]},
    "slides":[{"title":"max 5 words","highlight":"1-2 words","body":"max 18 words","products":["id"]},{"title":"","highlight":"","body":"","products":[]},{"title":"","highlight":"","body":"","products":[]}],
    "cta":{"punch":"max 6 words","highlight":"","body":"max 14 words"}},
- "reel":{"scenes":[{"text":"max 6 words, scroll-stopping hook","highlight":"1-2 words","sub":"max 9 words","say":"one spoken sentence, 8-14 words","products":[]},{"text":"","highlight":"","sub":"","say":"","products":[]},{"text":"","highlight":"","sub":"","say":"","products":[]},{"text":"","highlight":"","sub":"","say":"","products":["id"]},{"text":"call to action","highlight":"","sub":"phone or handle line","say":"","products":["id"]}]},
+ "reel":{"scenes":[{"text":"max 6 words, scroll-stopping hook","highlight":"1-2 words","sub":"max 9 words","say":"one spoken sentence, 8-14 words","products":[]},{"text":"the problem, relatable","highlight":"","sub":"","say":"one spoken sentence, 8-14 words","products":[]},{"text":"meet the product","highlight":"","sub":"","say":"one spoken sentence, 8-14 words","products":["id"]},{"text":"a real benefit","highlight":"","sub":"","say":"one spoken sentence, 8-14 words","products":["id"]},{"text":"call to action","highlight":"","sub":"phone or handle line","say":"spoken call to action with the phone number or handle","products":["id"]}]},
  "captions":{"mascot_hero":"","quote_poster":"","split_poster":"","comic_duo":"","list_cards":"","carousel":"","reel":""},
  "hashtags":["6 to 8 relevant, low-competition hashtags, no #viral #fyp #explore"]
 }"""
@@ -128,11 +128,11 @@ def fallback(b, rng=None):
         "carousel": {"cover": {"punch": heads[1], "highlight": hl(u0), "products": ids[:1]},
                      "slides": [{"title": u, "highlight": hl(u), "body": "", "products": ids[:1] if i == 2 else []} for i, u in enumerate((u0, u1, u2))],
                      "cta": {"punch": "Ready when you are", "highlight": "Ready", "body": b.phone or tag}},
-        "reel": {"scenes": [{"text": h0, "highlight": hl(u0), "sub": tag, "say": "", "products": []},
-                            {"text": rng.choice(probs), "highlight": "", "sub": "", "say": "", "products": []},
-                            {"text": f"Meet {pn}", "highlight": pn.split()[0], "sub": u0, "say": "", "products": ids[:1]},
-                            {"text": u1, "highlight": hl(u1), "sub": u2, "say": "", "products": ids[:1]},
-                            {"text": "Order now", "highlight": "now", "sub": b.phone or "@" + b.handle, "say": "", "products": ids[:1]}]},
+        "reel": {"scenes": [{"text": h0, "highlight": hl(u0), "sub": tag, "say": f"{h0} {tag}", "products": []},
+                            {"text": rng.choice(probs), "highlight": "", "sub": "", "say": "Kya aap bhi yahi sochte hain?", "products": []},
+                            {"text": f"Meet {pn}", "highlight": pn.split()[0], "sub": u0, "say": f"Meet {pn}. {u0}.", "products": ids[:1]},
+                            {"text": u1, "highlight": hl(u1), "sub": u2, "say": f"{u1}. And {u2}.", "products": ids[:1]},
+                            {"text": "Order now", "highlight": "now", "sub": b.phone or "@" + b.handle, "say": f"Order now. {b.phone}" if b.phone else "Order now. Follow us for more.", "products": ids[:1]}]},
         "captions": {k: f"{tag}\n{cta}".strip() for k in ("mascot_hero", "quote_poster", "split_poster", "comic_duo", "list_cards", "carousel", "reel")},
         "hashtags": ["#" + re.sub(r"\W", "", b.name)],
     }
