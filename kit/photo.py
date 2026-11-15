@@ -14,6 +14,7 @@ from PIL import Image, ImageFilter
 
 from .common import ROOT
 
+FAILED = []
 MODELS = "gemini-3.1-flash-image,gemini-3.1-flash-lite-image,gemini-2.5-flash-image"
 CACHE = ROOT / "output" / "people_cache"
 POSE_TXT = {"wave": "waving with one hand raised, friendly", "cheer": "both arms raised in joy, celebrating", "point": "one arm stretched out to the side, pointing with the index finger",
@@ -67,11 +68,10 @@ def _call(prompt, ref_png, key):
             try:
                 r = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent",
                                   headers={"x-goog-api-key": key, "Content-Type": "application/json"},
-                                  json={"contents": [{"parts": parts}], "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}}, timeout=180)
+                                  json={"contents": [{"parts": parts}], "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}}, timeout=int(os.getenv('IMAGE_TIMEOUT') or 100))
             except Exception as ex:
-                last = str(ex)[:120]
-                time.sleep(3)
-                continue
+                last = f"{m}: {str(ex)[:100]}"
+                break
             if r.ok:
                 try:
                     for pt in r.json()["candidates"][0]["content"]["parts"][::-1]:
@@ -95,6 +95,8 @@ def get(th, pose, expr):
     key = os.getenv("GEMINI_API_KEY")
     if not key:
         raise RuntimeError("no GEMINI_API_KEY")
+    if FAILED:
+        raise RuntimeError("photo people switched off after the first failure")
     CACHE.mkdir(parents=True, exist_ok=True)
     P = th.person
     f = CACHE / f"{th.seed}_{P['role']}_{P['style']}_{pose}_{expr}.png"
@@ -111,9 +113,6 @@ def get(th, pose, expr):
         Image.open(io.BytesIO(raw)).convert("RGB").save(b, "PNG")
         object.__setattr__(th, "_photo_ref", b.getvalue())
     return im
-
-
-FAILED = []
 
 
 def sprite(th, w, pose, expr, flip=False):
