@@ -6,7 +6,6 @@
   python demo.py build                  make output/<brand>_demo_<time>.zip
       --brand path/to/folder            use another brand folder (default: brand/)
       --voice none|edge|elevenlabs      Reel voice (default none: text + animation, optional music in assets/music)
-      --character                       Character style for images/AI (default: realistic)
       --no-reel   --offline             skip the Reel / skip the AI and use hand-written or template copy
 """
 import argparse
@@ -45,10 +44,7 @@ def build(brand_dir=None, voice="none", reel=True, offline=False, character="rea
         print("WARNING:", p_)
     out = ROOT / "output" / f"{slug}_demo_{stamp}"
     out.mkdir(parents=True, exist_ok=True)
-    
-    # character पॅरामीटर AI ला पास करा
     copy, how = C.make_copy(b, use_ai=not offline, character=character)
-    
     print("Copy:", how)
     (out / "copy.json").write_text(json.dumps(copy, ensure_ascii=False, indent=1), encoding="utf-8")
     files = []
@@ -95,10 +91,7 @@ def main():
     bd = sub.add_parser("build")
     bd.add_argument("--brand", default=None)
     bd.add_argument("--voice", default="none", choices=["none", "edge", "elevenlabs"])
-    
-    # --character आर्ग्युमेंट जोडा
     bd.add_argument("--character", default="realistic", help="Set character style for AI images (default: realistic)")
-    
     bd.add_argument("--no-reel", action="store_true")
     bd.add_argument("--offline", action="store_true")
     a = ap.parse_args()
@@ -108,8 +101,7 @@ def main():
         print(f"Brand: {b.name}  ({len(b.products)} products)")
         print("\n".join("  - " + p for p in probs) if probs else "Everything needed is there.")
     else:
-        # build फंक्शनला a.character पास करा
-        build(a.brand, a.voice, not a.no_reel, a.offline, a.character)
+        build(a.brand, a.voice, not a.no_reel, a.offline, getattr(a, "character", "realistic"))
 
 
 if __name__ == "__main__":
