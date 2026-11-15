@@ -10,8 +10,8 @@ on:
       voice:
         description: "Reel voice"
         type: choice
-        default: none
-        options: [none, edge, elevenlabs]
+        default: auto
+        options: [auto, none, edge, elevenlabs]
       offline:
         description: "Skip the AI (use hand-written or template copy)"
         type: boolean
