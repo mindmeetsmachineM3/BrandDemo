@@ -68,15 +68,19 @@ LANG_NOTE = {
 def _call(prompt, models, key):
     import requests
     last = ""
+    to = int(os.getenv("GEMINI_TIMEOUT") or 70)
     for m in models:
+        print(f"Gemini: asking {m} ...", flush=True)
         for attempt in range(3):
             try:
                 r = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent",
                                   headers={"x-goog-api-key": key, "Content-Type": "application/json"},
                                   json={"contents": [{"parts": [{"text": prompt}]}],
-                                        "generationConfig": {"temperature": 0.8, "responseMimeType": "application/json"}}, timeout=120)
+                                        "generationConfig": {"temperature": 0.8, "responseMimeType": "application/json"}}, timeout=to)
             except Exception as ex:
-                last = str(ex)[:150]
+                last = f"{m}: {str(ex)[:110]}"
+                if "timed out" in str(ex).lower():          # slow model: go to the next one instead of waiting again
+                    break
                 time.sleep(4)
                 continue
             if r.ok:
@@ -142,7 +146,7 @@ def make_copy(b, use_ai=True, rng=None, avoid=None):
         return _normalise(ov, b, rng), "hand-written copy from brand.json (demo_copy)"
     key = os.getenv("GEMINI_API_KEY")
     if use_ai and key:
-        models = [m for m in (os.getenv("DEMO_MODELS") or "gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-2.5-flash").split(",") if m]
+        models = [m for m in (os.getenv("DEMO_MODELS") or "gemini-3.7-flash,gemini-2.5-flash,gemini-3.6-flash,gemini-3.5-flash").split(",") if m]
         names = rng.sample(list(FORMULAS), 8)
         pieces = ["mascot_hero headline", "quote_poster quote", "split_poster solution", "comic_duo reply", "list_cards headline", "carousel cover", "reel hook", "carousel closing line"]
         formulas = "\n".join(f"- {pc}: {FORMULAS[n]}" for pc, n in zip(pieces, names))
