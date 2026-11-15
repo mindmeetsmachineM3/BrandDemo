@@ -201,7 +201,9 @@ def frame(b, th, S, t, T, n, logo_chip):
     return img.convert("RGB")
 
 
-def build_reel(b, reel, out_path, th, voice="none", scene_min=3.0):
+def build_reel(b, reel, out_path, th, voice="auto", scene_min=3.0):
+    if voice == "auto":
+        voice = "elevenlabs" if (os.getenv("ELEVEN_API_KEY") and os.getenv("ELEVEN_VOICE")) else "edge"
     scenes = reel["scenes"]
     n = len(scenes)
     tmp = Path(tempfile.mkdtemp(prefix="reel_"))
@@ -241,12 +243,17 @@ def build_reel(b, reel, out_path, th, voice="none", scene_min=3.0):
         audio = tmp / "voice.wav"
         run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "44100", str(audio)])
     music = sorted((ROOT / "assets" / "music").glob("*.mp3")) if (ROOT / "assets" / "music").exists() else []
+    if not music and os.getenv("REEL_MUSIC", "on") != "off":          # no licensed track supplied: use an original generated beat
+        from . import music as M
+        gen = tmp / "beat.wav"
+        M.track(total + 1, th.seed, gen)
+        music = [gen]
     if music:
         m = random.choice(music)
         mixed = tmp / "mix.wav"
         if audio:
             run(["ffmpeg", "-v", "error", "-y", "-i", str(audio), "-stream_loop", "-1", "-i", str(m), "-filter_complex",
-                 "[1:a]volume=0.12[m];[0:a][m]amix=inputs=2:duration=first:normalize=0", "-ar", "44100", str(mixed)])
+                 "[1:a]volume=0.16[m];[0:a][m]amix=inputs=2:duration=first:normalize=0", "-ar", "44100", str(mixed)])
         else:
             run(["ffmpeg", "-v", "error", "-y", "-stream_loop", "-1", "-i", str(m), "-t", f"{total:.2f}", "-af", "volume=0.35,afade=t=out:st=%.2f:d=1" % (total - 1), "-ar", "44100", str(mixed)])
         audio = mixed
@@ -265,4 +272,4 @@ def build_reel(b, reel, out_path, th, voice="none", scene_min=3.0):
     p.stdin.close()
     if p.wait():
         raise RuntimeError("ffmpeg failed")
-    return total, ("voice: " + voice if clips else "silent") + (", music" if music else "")
+    return total, ("voice: " + voice if clips else "no voice (voice service failed or off)") + (", music" if music else "")
