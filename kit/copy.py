@@ -107,7 +107,7 @@ def fallback(b):
     }
 
 
-def make_copy(b, use_ai=True):
+def make_copy(b, use_ai=True, character="realistic"):
     ov = b.d.get("demo_copy")
     if ov:
         return ov, "hand-written copy from brand.json (demo_copy)"
