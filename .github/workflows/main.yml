@@ -12,6 +12,9 @@ on:
         type: choice
         default: none
         options: [none, edge, elevenlabs]
+      character:
+        description: "Character style for images"
+        default: realistic
       offline:
         description: "Skip the AI (use hand-written or template copy)"
         type: boolean
@@ -49,7 +52,7 @@ jobs:
           ARGS=""
           [ "${{ inputs.offline }}" = "true" ] && ARGS="$ARGS --offline"
           [ "${{ inputs.no_reel }}" = "true" ] && ARGS="$ARGS --no-reel"
-          python demo.py build --brand "${{ inputs.brand }}" --voice "${{ inputs.voice }}" $ARGS
+          python demo.py build --brand "${{ inputs.brand }}" --voice "${{ inputs.voice }}" --character "${{ inputs.character }}" $ARGS
       - uses: actions/upload-artifact@v4
         with:
           name: brand-demo
