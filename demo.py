@@ -5,7 +5,7 @@
   python demo.py check                  list what is missing in brand/
   python demo.py build                  make output/<brand>_demo_<time>.zip
       --brand path/to/folder            use another brand folder (default: brand/)
-      --voice none|edge|elevenlabs      Reel voice (default none: text + animation, optional music in assets/music)
+      --voice auto|none|edge|elevenlabs Reel voice (default auto: ElevenLabs if keys exist, else free edge voice; background beat is generated, or put mp3s in assets/music)
       --no-reel   --offline             skip the Reel / skip the AI and use hand-written or template copy
 """
 import argparse
@@ -47,7 +47,7 @@ def load_hist():
         return {"moods": [], "lines": []}
 
 
-def build(brand_dir=None, voice="none", reel=True, offline=False, seed=None, chars="auto"):
+def build(brand_dir=None, voice="auto", reel=True, offline=False, seed=None, chars="auto"):
     b = Brand(brand_dir)
     slug = b.slug
     stamp = time.strftime("%Y%m%d_%H%M")
@@ -133,7 +133,7 @@ def main():
     c.add_argument("--brand", default=None)
     bd = sub.add_parser("build")
     bd.add_argument("--brand", default=None)
-    bd.add_argument("--voice", default="none", choices=["none", "edge", "elevenlabs"])
+    bd.add_argument("--voice", default="auto", choices=["auto", "none", "edge", "elevenlabs"], help="auto = ElevenLabs if keys exist, else free edge voice")
     bd.add_argument("--no-reel", action="store_true")
     bd.add_argument("--offline", action="store_true")
     bd.add_argument("--seed", type=int, default=None, help="repeat an earlier look (printed in the log)")
