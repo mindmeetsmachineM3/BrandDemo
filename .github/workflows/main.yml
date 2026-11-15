@@ -32,6 +32,8 @@ on:
 jobs:
   demo:
     runs-on: ubuntu-latest
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
