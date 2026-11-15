@@ -37,6 +37,8 @@ jobs:
           which ffmpeg || sudo ln -sf "$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')" /usr/local/bin/ffmpeg
           ffmpeg -version | head -1
       - name: Check the brand folder
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python demo.py check --brand "${{ inputs.brand }}"
       - name: Build demo
         env:
