@@ -75,7 +75,7 @@ def build_profile(bdir, brief):
         raise SystemExit("brand/prompt.txt needs GEMINI_API_KEY to be read. Add the secret, or write brand/brand.json by hand.")
     pdir = Path(bdir) / "assets" / "products"
     files = sorted(f.name for f in pdir.glob("*") if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"))
-    models = [m for m in (os.getenv("DEMO_MODELS") or "gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-2.5-flash").split(",") if m]
+    models = [m for m in (os.getenv("DEMO_MODELS") or "gemini-3.7-flash,gemini-2.5-flash,gemini-3.6-flash,gemini-3.5-flash").split(",") if m]
     prof = C._call(PROFILE_PROMPT.format(brief=brief, files=", ".join(files) or "(none)"), models, key)
     prof.setdefault("products", [])
     have = {p.get("image") for p in prof["products"]}
