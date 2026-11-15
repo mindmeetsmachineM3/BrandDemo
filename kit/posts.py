@@ -1,195 +1,293 @@
-"""Feed posts and carousel slides, themed from brand.json colours."""
+"""Feed posts + carousel. Five layout families, each drawn in a fresh theme with original mascots."""
+import random
+
 from PIL import Image, ImageDraw
 
-from .common import (chip, draw_lines, fit, font, footer, mix, pill, place, products_row, text_fit)
+from . import art
+from .art import lum, on, rrect, burst, sparkle, squiggle, bubble, rich, mascot, buddy, with_product
+from .common import chip, fit, font, text_fit, place, shadow
 
 W = 1080
+KINDS = ["mascot_hero", "quote_poster", "split_poster", "comic_duo", "list_cards"]
 
 
-def lum(c):
-    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
-
-
-def on(c):
-    """readable text colour on background c"""
-    return (24, 24, 24) if lum(c) > 150 else (255, 255, 255)
-
-
-def canvas(b, bg):
-    return Image.new("RGBA", (W, b.post_h), bg + (255,))
-
-
-def hero(b, p):
+# ------------------------------------------------------------------ helpers
+def start(b, th, rng, kind=None):
     H = b.post_h
-    bg = b.secondary
-    img = canvas(b, bg)
+    img = art.background(th, W, H, kind, rng)
+    return img, H
+
+
+def foot(img, b, th, h=76):
+    W_, H = img.size
     d = ImageDraw.Draw(img)
-    d.ellipse((int(W * .55), int(H * .30), int(W * 1.35), int(H * .95)), fill=mix(bg, (0, 0, 0), .10))
-    chip(img, b)
-    ink = on(bg)
-    hl = b.primary if abs(lum(b.primary) - lum(bg)) > 60 else ink
-    d.text((44, 176), (p.get("eyebrow") or "").upper(), font=font("Bold", 27, p.get("eyebrow", "")), fill=hl)
-    y = text_fit(d, 44, 222, p.get("headline", ""), "Bold", 990, 170, 70, ink, lh=1.12)
-    y = text_fit(d, 44, y + 4, p.get("highlight", ""), "Bold", 990, 130, 92, hl, lh=1.1) if p.get("highlight") else y
-    top = int(y + 24)
-    bottom = H - 100
-    wide = sum(b.product(i).width / b.product(i).height for i in p["products"]) > 1.15     # squat packs (tubs, buckets): full-width band
-    if wide:
-        d = ImageDraw.Draw(img)
-        yb = text_fit(d, 44, top + 6, p.get("body", ""), "Medium", 990, 120, 32, ink, lh=1.35)
-        products_row(img, b, p["products"], (40, int(yb + 16), W - 40, bottom - (90 if p.get("cta") else 12)))
-    else:
-        products_row(img, b, p["products"], (int(W * .50), top, W - 30, bottom - 20))
-        d = ImageDraw.Draw(img)
-        yb = text_fit(d, 44, top + 10, p.get("body", ""), "Medium", 450, 260, 32, ink, lh=1.38)
-    if p.get("cta"):
-        pill(img, 44, H - 175, p["cta"], b.primary, on(b.primary), size=26)
-    if p.get("badge"):
-        cx, cy, r = W - 170, top + 60, 105
-        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=b.primary, outline=(255, 255, 255), width=5)
-        text_fit(d, cx, cy - 36, p["badge"], "Bold", 170, 90, 44, on(b.primary), lh=1.05, center=True)
-    footer(img, b)
-    return img
-
-
-def offer(b, p):
-    H = b.post_h
-    bg = b.primary
-    img = canvas(b, bg)
-    d = ImageDraw.Draw(img)
-    for i in range(14, 0, -1):                                   # soft spotlight behind the products
-        r = int(220 + i * 38)
-        d.ellipse((W / 2 - r, H * .62 - r, W / 2 + r, H * .62 + r), fill=mix(bg, (255, 255, 255), .035 * (15 - i) / 14 * 4))
-    chip(img, b)
-    ink = on(bg)
-    acc = b.secondary
-    d.text((W / 2, 180), (p.get("eyebrow") or "").upper(), font=font("Bold", 27, p.get("eyebrow", "")), fill=acc, anchor="ma")
-    y = text_fit(d, W / 2, 224, p.get("headline", ""), "Bold", 940, 220, 84, ink, lh=1.1, center=True)
-    if p.get("highlight"):
-        y = text_fit(d, W / 2, y + 2, p["highlight"], "Bold", 940, 120, 84, acc, lh=1.1, center=True)
-    y = text_fit(d, W / 2, y + 12, p.get("body", ""), "Medium", 820, 110, 32, ink, lh=1.3, center=True)
-    products_row(img, b, p["products"], (60, int(y + 40), W - 60, H - 200))
-    d = ImageDraw.Draw(img)
-    if p.get("badge"):
-        cx, cy, r = W - 190, int(y + 150), 115
-        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=acc, outline=(255, 255, 255), width=6)
-        text_fit(d, cx, cy - 38, p["badge"], "Bold", 190, 100, 50, on(acc), lh=1.05, center=True)
-    if p.get("cta"):
-        f = font("Bold", 28, p["cta"])
-        w = int(d.textlength(p["cta"], font=f)) + 60
-        pill(img, (W - w) // 2, H - 172, p["cta"], acc, on(acc), size=28)
-    footer(img, b)
-    return img
-
-
-def tips(b, p):
-    H = b.post_h
-    bg = b.dark
-    img = canvas(b, bg)
-    d = ImageDraw.Draw(img)
-    d.ellipse((-260, int(H * .55), 520, int(H * 1.1)), fill=mix(bg, b.primary, .35))
-    chip(img, b)
-    ink = on(bg)
-    d.text((44, 184), (p.get("eyebrow") or "").upper(), font=font("Bold", 27, p.get("eyebrow", "")), fill=b.secondary)
-    y = text_fit(d, 44, 226, p.get("headline", ""), "Bold", 700, 190, 80, ink, lh=1.1)
-    if p.get("highlight"):
-        y = text_fit(d, 44, y, p["highlight"], "Bold", 700, 110, 80, b.secondary, lh=1.1)
-    items = p.get("items", [])[:3]
-    top = int(y + 36)
-    avail = H - 190 - top
-    n = max(1, len(items))
-    gap = 18
-    ch = min(190, int((avail - gap * (n - 1)) / n))
-    products_row(img, b, p["products"], (690, 300, W - 20, H - 120))
-    d = ImageDraw.Draw(img)
-    yy = top
-    for i, it in enumerate(items, 1):
-        d.rounded_rectangle((44, yy, 650, yy + ch), 30, fill=(255, 255, 255))
-        r = min(40, ch // 2 - 14)
-        d.ellipse((66, yy + ch / 2 - r, 66 + 2 * r, yy + ch / 2 + r), fill=b.primary)
-        d.text((66 + r, yy + ch / 2), str(i), font=font("Bold", int(r * 1.1)), fill=on(b.primary), anchor="mm")
-        tx = 66 + 2 * r + 22
-        if it.get("body"):
-            text_fit(d, tx, yy + 16, it.get("title", ""), "Bold", 650 - tx - 20, ch * .4, 32, (24, 24, 24), lh=1.1)
-            text_fit(d, tx, yy + 16 + ch * .38, it["body"], "Medium", 650 - tx - 20, ch * .5, 25, (80, 80, 80), lh=1.2)
-        else:
-            text_fit(d, tx, yy + ch / 2 - 22, it.get("title", ""), "Bold", 650 - tx - 20, ch * .7, 34, (24, 24, 24), lh=1.15)
-        yy += ch + gap
-    if p.get("note"):
-        d.text((44, H - 125), p["note"], font=font("Medium", 23, p["note"]), fill=mix(bg, (255, 255, 255), .7), anchor="lm")
-    footer(img, b, fill=mix(bg, (0, 0, 0), .35))
-    return img
-
-
-KINDS = {"hero": hero, "offer": offer, "tips": tips}
-
-
-def post(b, p):
-    return KINDS.get(p.get("kind"), hero)(b, p).convert("RGB")
-
-
-# ------------------------------------------------------------------ carousel
-def car_cover(b, c):
-    H = b.post_h
-    bg = b.primary
-    img = canvas(b, bg)
-    d = ImageDraw.Draw(img)
-    d.ellipse((-200, int(H * .45), W + 200, int(H * 1.25)), fill=mix(bg, (0, 0, 0), .18))
-    chip(img, b)
-    ink = on(bg)
-    d.text((44, 176), (c.get("eyebrow") or "").upper(), font=font("Bold", 27, c.get("eyebrow", "")), fill=b.secondary)
-    y = text_fit(d, 44, 222, c.get("headline", ""), "Bold", 990, 260, 96, ink, lh=1.08)
-    if c.get("highlight"):
-        y = text_fit(d, 44, y + 4, c["highlight"], "Bold", 990, 150, 96, b.secondary, lh=1.08)
-    products_row(img, b, c["products"], (80, int(y + 30), W - 80, H - 190))
-    pill(img, 44, H - 172, "Swipe  >>", b.secondary, on(b.secondary), size=28)
-    footer(img, b, fill=mix(b.dark, b.primary, .2))
-    return img.convert("RGB")
-
-
-def car_slide(b, s, i, n):
-    H = b.post_h
-    bg = b.light
-    img = canvas(b, bg)
-    d = ImageDraw.Draw(img)
-    chip(img, b)
-    d.ellipse((W - 330, 40, W - 30, 340), fill=mix(bg, b.primary, .12))
-    d.ellipse((50, 190, 190, 330), fill=b.primary)
-    d.text((120, 260), str(i), font=font("Bold", 84), fill=on(b.primary), anchor="mm")
-    y = text_fit(d, 44, 380, s.get("title", ""), "Bold", 990, 260, 76, b.dark, lh=1.12)
-    if s.get("body"):
-        y = text_fit(d, 44, y + 12, s["body"], "Medium", 520 if s["products"] else 990, 330, 38, (60, 60, 60), lh=1.42)
-    if s.get("products"):
-        products_row(img, b, s["products"], (560, int(H * .40), W - 10, H - 100))
-    for k in range(n):
-        d.ellipse((44 + k * 34, H - 120, 44 + k * 34 + 18, H - 102), fill=b.primary if k == i else mix(bg, (0, 0, 0), .2))
-    footer(img, b)
-    return img.convert("RGB")
-
-
-def car_cta(b, c):
-    H = b.post_h
-    bg = b.dark
-    img = canvas(b, bg)
-    d = ImageDraw.Draw(img)
-    d.ellipse((-200, int(H * .55), W + 200, int(H * 1.3)), fill=mix(bg, b.primary, .4))
-    chip(img, b, x=44, y=40)
-    y = text_fit(d, W / 2, 300, c.get("headline", ""), "Bold", 940, 260, 90, (255, 255, 255), lh=1.1, center=True)
-    y = text_fit(d, W / 2, y + 16, c.get("body", ""), "Medium", 860, 200, 40, mix(bg, (255, 255, 255), .8), lh=1.35, center=True)
-    if b.phone:
-        f = font("Bold", 38)
-        w = int(d.textlength(b.phone, font=f)) + 70
-        pill(img, (W - w) // 2, int(y + 40), b.phone, b.secondary, on(b.secondary), size=38, pady=16)
+    d.rectangle((0, H - h, W_, H), fill=th.dark)
+    d.rectangle((0, H - h, W_, H - h + 6), fill=b.primary)
+    d.text((44, H - h // 2 + 3), b.tagline or b.name, font=font("Bold", 26, b.tagline), fill=(255, 255, 255), anchor="lm")
     if b.handle:
-        d.text((W / 2, int(y + 190)), "@" + b.handle, font=font("Bold", 34), fill=b.secondary, anchor="ma")
-    footer(img, b, fill=mix(bg, (0, 0, 0), .35))
-    return img.convert("RGB")
+        d.text((W_ - 44, H - h // 2 + 3), "@" + b.handle, font=font("Bold", 26), fill=th.accent if abs(lum(th.accent) - lum(th.dark)) > 90 else (255, 255, 255), anchor="rm")
 
 
-def carousel(b, c):
-    slides = [car_cover(b, c["cover"])]
+def cta_pill(img, th, text, cx, y, size=30, rot=0):
+    if not text:
+        return
+    d = ImageDraw.Draw(img)
+    f = font("Bold", size, text)
+    w = int(d.textlength(text, font=f)) + 80
+    rrect(img, (cx - w / 2, y, cx + w / 2, y + size + 40), (size + 40) // 2, th.accent, th.dark, 5, shadow=7, rot=rot)
+    ImageDraw.Draw(img).text((cx, y + (size + 40) / 2 + 1), text, font=f, fill=on(th.accent), anchor="mm")
+
+
+def tag(img, th, text, x, y, fill=None, size=26, rot=0):
+    fill = fill or th.dark
+    d = ImageDraw.Draw(img)
+    f = font("Bold", size, text)
+    w = int(d.textlength(text, font=f)) + 44
+    rrect(img, (x, y, x + w, y + size + 22), 14, fill, shadow=0, rot=rot)
+    d = ImageDraw.Draw(img)
+    d.text((x + w / 2, y + (size + 22) / 2 + 1), text, font=f, fill=on(fill), anchor="mm")
+    return x + w
+
+
+def fit_sprite(sp, maxw, maxh):
+    s = min(maxw / sp.width, maxh / sp.height)
+    return sp.resize((max(1, int(sp.width * s)), max(1, int(sp.height * s))), Image.LANCZOS)
+
+
+def put(img, sp, cx, bottom, ground_shadow=True):
+    if ground_shadow:
+        art.shadow_under(img, cx, bottom - 8, sp.width * .7)
+    img.alpha_composite(sp, (int(cx - sp.width / 2), int(bottom - sp.height)))
+
+
+def stamp(img, th, text, cx, cy, r=105, rot=-12):
+    if not text:
+        return
+    burst(img, cx, cy, r, th.accent2 if lum(th.accent2) > 60 and abs(lum(th.accent2) - lum(th.bg)) > 40 else th.accent, th.dark, n=13, rot=.3)
+    fillc = th.accent2 if lum(th.accent2) > 60 and abs(lum(th.accent2) - lum(th.bg)) > 40 else th.accent
+    rich(img, th, text, "", (cx - r * .72, cy - r * .5, cx + r * .72, cy + r * .5), start=54, min_size=22, fill=on(fillc), effect="plain", rot=rot, lh=1.0)
+
+
+def other(th):
+    """a second, different person in the same colours (so two characters in one picture never look identical)"""
+    import dataclasses
+    rng = random.Random(th.seed + 7)
+    cur = th.person["role"]
+    pool = [r for r in art.ROLES if r[0] != cur and (cur in ("painter", "engineer") or r[0] not in ("painter", "engineer"))]
+    pr = art.make_person(rng, [th.accent, th.accent2, th.card, (255, 255, 255)], th.bg, role=rng.choice(pool))
+    return dataclasses.replace(th, person=pr)
+
+
+def head(p):
+    return p.get("punch") or p.get("headline") or ""
+
+
+def prod_ids(p, b):
+    return p.get("products") or b.product_ids()[:1]
+
+
+def hero_buddy(b, th, p, h, pose, expr):
+    return with_product(th, b.product(prod_ids(p, b)[0]), h=h, pose=pose, expr=expr)
+
+
+# ------------------------------------------------------------------ layouts
+def mascot_hero(b, p, th, rng):
+    img, H = start(b, th, rng)
+    chip(img, b)
+    cy = int(H * .62)
+    art.burst(img, 400, cy + 20, 320, art.mix(th.bg2, (255, 255, 255), .22), th.dark, n=18, depth=.08, ow=0)
+    y = rich(img, th, head(p), p.get("highlight", ""), (50, 150, W - 50, 150 + int(H * .27)), start=140, rot=-2)
+    bd = hero_buddy(b, th, p, int(H * .40), "wave", rng.choice(["grin", "wow", "wink"]))
+    bd = fit_sprite(bd, 600, int(H * .56))
+    put(img, bd, 400, H - 215)
+    m = mascot(other(th), 300, rng.choice(["point", "cheer", "wave"]), rng.choice(["grin", "wink", "smirk"]), flip=True)
+    put(img, m, 900, H - 175)
+    if p.get("bubble"):
+        bubble(img, th, p["bubble"], 800, y + 110, 440, tail=(880, H - 175 - 360 + 40), start=40, maxh=180, rot=-2)
+    stamp(img, th, p.get("sticker") or p.get("stamp", ""), 150, cy - 170)
+    cta_pill(img, th, p.get("cta", ""), 540, H - 170 if H > 1200 else H - 150)
+    foot(img, b, th)
+    return img
+
+
+def quote_poster(b, p, th, rng):
+    img, H = start(b, th, rng)
+    chip(img, b)
+    d = ImageDraw.Draw(img)
+    q = p.get("quote") or head(p)
+    sparkle(img, 120, 285, 46, th.accent)
+    sparkle(img, W - 110, 250, 30, th.accent2)
+    y = rich(img, th, q, p.get("highlight", ""), (60, 230, W - 60, int(H * .54)), start=230, min_size=60, lh=1.08, rot=-1.5)
+    squiggle(img, 200, y + 40, 520, th.accent, amp=11, w=9)
+    d = ImageDraw.Draw(img)
+    d.text((60, y + 78), "- " + b.name, font=font("Bold", 30, b.name), fill=th.ink, anchor="la")
+    pid = prod_ids(p, b)
+    pr = b.product(pid[0])
+    ph = int(H * .27)
+    pw = int(pr.width * ph / pr.height)
+    if pw > 420:
+        ph, pw = int(ph * 420 / pw), 420
+    place(img, pr, W - pw - 60, H - 110 - ph - 20, h=ph, rot=7)
+    m = mascot(th, 290, rng.choice(["cheer", "shrug", "wave"]), rng.choice(["wow", "grin", "wink"]))
+    put(img, m, 200, H - 95)
+    if p.get("sticker"):
+        stamp(img, th, p["sticker"], W - 150, int(H * .60) + 40, r=95, rot=10)
+    cta_pill(img, th, p.get("cta", ""), 640, H - 175, size=26, rot=-2) if p.get("cta") and H > 1200 else None
+    foot(img, b, th)
+    return img
+
+
+def split_poster(b, p, th, rng):
+    img, H = start(b, th, rng)
+    d = ImageDraw.Draw(img)
+    top = int(H * .44)
+    poly = Image.new("RGBA", (W * 2, H * 2), (0, 0, 0, 0))
+    ImageDraw.Draw(poly).polygon([(0, (top + 70) * 2), (W * 2, (top - 70) * 2), (W * 2, H * 2), (0, H * 2)], fill=th.card)
+    poly = poly.resize((W, H), Image.LANCZOS)
+    img.alpha_composite(poly)
+    chip(img, b)
+    ImageDraw.Draw(img)
+    tag(img, th, p.get("before_tag", "BEFORE"), 50, 160)
+    rich(img, th, p.get("problem") or "Still struggling?", "", (50, 220, 700, top + 20), start=110, min_size=44, align="left", rot=-2)
+    m = mascot(other(th), 290, "shrug", "sad", flip=True)
+    put(img, m, 880, top + 30, ground_shadow=False)
+    tag(img, th, "WITH " + b.name.upper(), 50, top + 110, fill=th.accent2 if abs(lum(th.accent2) - lum(th.card)) > 60 else th.dark)
+    rich(img, th, p.get("solution") or head(p), p.get("highlight", ""), (50, top + 175, 640, H - 180), start=96, min_size=42, align="left",
+         fill=th.card_ink, hlfill=th.bg if abs(lum(th.bg) - lum(th.card)) > 70 else th.accent2, effect="plain" if th.effect != "sticker" else "plain")
+    bd = hero_buddy(b, th, p, int(H * .36), "cheer", "grin")
+    bd = fit_sprite(bd, 520, int(H * .42))
+    put(img, bd, 830, H - 100)
+    stamp(img, th, p.get("sticker", ""), 930, top + 150, r=88, rot=12)
+    cta_pill(img, th, p.get("cta", ""), 330, H - 160, size=26) if H > 1200 else None
+    foot(img, b, th)
+    return img
+
+
+def comic_duo(b, p, th, rng):
+    img, H = start(b, th, rng, kind="halftone")
+    chip(img, b)
+    pad = 36
+    box = (pad, 150, W - pad, H - 110)
+    rrect(img, box, 34, th.card, th.dark, 7, shadow=10)
+    burst(img, 560, int(H * .56), 360, art.mix(th.card, th.accent, .35), th.card, n=22, depth=.07, ow=0)
+    ImageDraw.Draw(img)
+    x = tag(img, th, p.get("eyebrow") or "MEANWHILE...", box[0] + 22, box[1] + 20, fill=th.accent, size=26)
+    m = mascot(other(th), 270, rng.choice(["shrug", "point", "wave"]), rng.choice(["wow", "smirk", "sad"]), flip=True)
+    put(img, m, 850, int(H * .50))
+    bubble(img, th, p.get("problem") or p.get("bubble") or "Kya karein?", 410, 350, 580, tail=(770, int(H * .50) - 250), start=50, maxh=200, rot=-2)
+    bd = hero_buddy(b, th, p, int(H * .30), "point", "wink")
+    bd = fit_sprite(bd, 430, int(H * .33))
+    put(img, bd, 270, H - 175)
+    bubble(img, th, p.get("bubble") or head(p), 745, int(H * .66), 500, tail=(420, H - 175 - bd.height + 60), start=52, maxh=250,
+           fill=th.accent, ink=on(th.accent), rot=1.5)
+    cta_pill(img, th, p.get("cta", ""), 760, H - 175, size=24, rot=-2) if p.get("cta") else None
+    foot(img, b, th)
+    return img
+
+
+def list_cards(b, p, th, rng):
+    img, H = start(b, th, rng)
+    chip(img, b)
+    y = rich(img, th, head(p), p.get("highlight", ""), (50, 150, W - 50, 150 + int(H * .20)), start=116, min_size=50, rot=-1.5)
+    items = (p.get("items") or [])[:3]
+    n = max(1, len(items))
+    top = int(y + 40)
+    avail = H - 130 - top
+    gap = 22
+    ch = min(220, int((avail - gap * (n - 1)) / n))
+    yy = top
+    for i, it in enumerate(items):
+        t = it.get("title", "") if isinstance(it, dict) else str(it)
+        rot = (-1.8, 1.2, -1.0)[i % 3]
+        rrect(img, (50, yy, 690, yy + ch), 28, th.card, th.dark, 5, shadow=9, rot=rot)
+        burst(img, 120, yy + ch / 2, ch * .3, th.accent, th.dark, n=10, depth=.14, ow=4)
+        d = ImageDraw.Draw(img)
+        d.text((120, yy + ch / 2 + 2), str(i + 1), font=art.dfont(th, int(ch * .34), "1"), fill=on(th.accent), anchor="mm")
+        f_, ln_, lh_ = fit(d, t, "Bold", 470, ch - 40, 60, 26, 1.12)
+        y_ = yy + (ch - len(ln_) * lh_) / 2
+        for l_ in ln_:
+            d.text((190, y_), l_, font=f_, fill=th.card_ink)
+            y_ += lh_
+        yy += ch + gap
+    bd = hero_buddy(b, th, p, int(H * .40), "wave", "grin")
+    bd = fit_sprite(bd, 380, int(H * .40))
+    put(img, bd, 870, int(top + avail * .62))
+    m = mascot(other(th), 230, "cheer", "wink", flip=True)
+    put(img, m, 900, H - 95)
+    stamp(img, th, p.get("sticker", ""), 900, top + 40, r=80, rot=-10)
+    foot(img, b, th)
+    return img
+
+
+LAYOUT = {"mascot_hero": mascot_hero, "quote_poster": quote_poster, "split_poster": split_poster, "comic_duo": comic_duo, "list_cards": list_cards}
+
+
+def post(b, p, th, rng, kind):
+    return LAYOUT[kind](b, p, th, rng).convert("RGB")
+
+
+# ------------------------------------------------------------------ carousel (one theme, one character, different poses)
+def _char(th, rng):
+    return dict(body=th.body, acc=th.acc, color=th.char_col)
+
+
+def car_cover(b, c, th, rng):
+    img, H = start(b, th, rng)
+    chip(img, b)
+    art.burst(img, 540, int(H * .70), 330, art.mix(th.bg2, (255, 255, 255), .2), th.dark, n=20, depth=.07, ow=0)
+    y = rich(img, th, head(c), c.get("highlight", ""), (50, 160, W - 50, 160 + int(H * .30)), start=170, min_size=70, rot=-2)
+    bd = with_product(th, b.product(prod_ids(c, b)[0]), h=int(H * .4), pose="cheer", expr="grin")
+    put(img, fit_sprite(bd, 640, int(H * .5)), 440, H - 175)
+    put(img, mascot(other(th), 300, "point", "wink", flip=True), 920, H - 150)
+    cta_pill(img, th, "SWIPE  >>", 540, H - 150 if H < 1200 else H - 168, size=30, rot=-2)
+    foot(img, b, th)
+    return img
+
+
+def car_slide(b, s, i, n, th, rng):
+    img, H = start(b, th, rng, kind=["dots", "stripes", "blobs", "zigzag"][i % 4])
+    chip(img, b)
+    d = ImageDraw.Draw(img)
+    burst(img, 150, 320, 95, th.accent, th.dark, n=12, ow=6, rot=.2)
+    ImageDraw.Draw(img).text((150, 324), str(i), font=art.dfont(th, 110, "1"), fill=on(th.accent), anchor="mm")
+    y = rich(img, th, s.get("title", ""), s.get("highlight", ""), (60, 420, 720, 420 + int(H * .24)), start=150, min_size=56, align="left", rot=-1)
+    if s.get("body"):
+        rrect(img, (50, y + 30, 640, y + 30 + min(330, int(H * .26))), 26, th.card, th.dark, 5, shadow=8)
+        text_fit(ImageDraw.Draw(img), 82, y + 54, s["body"], "Medium", 530, min(330, int(H * .26)) - 50, 36, th.card_ink, min_size=24, lh=1.3)
+    poses = [("wave", "grin"), ("hold", "wow"), ("cheer", "wink")][(i - 1) % 3]
+    if s.get("products"):
+        bd = with_product(th, b.product(s["products"][0]), h=int(H * .32), pose=poses[0], expr=poses[1])
+        put(img, fit_sprite(bd, 560, int(H * .44)), 800, H - 110)
+    else:
+        put(img, mascot(th, 470, *poses), 810, H - 100)
+    for k in range(n):
+        ImageDraw.Draw(img).ellipse((50 + k * 34, H - 130, 68 + k * 34, H - 112), fill=th.accent if k == i else (255, 255, 255, 120))
+    foot(img, b, th)
+    return img
+
+
+def car_cta(b, c, th, rng):
+    img, H = start(b, th, rng)
+    chip(img, b)
+    y = rich(img, th, head(c), c.get("highlight", ""), (50, 200, W - 50, 200 + int(H * .25)), start=150, min_size=60, rot=-2)
+    put(img, mascot(th, 380, "cheer", "grin"), 540, int(H * .77))
+    d = ImageDraw.Draw(img)
+    if c.get("body"):
+        text_fit(d, W / 2, y + 20, c["body"], "Bold", 860, 120, 38, th.ink, min_size=24, center=True)
+    if b.phone:
+        cta_pill(img, th, b.phone, 540, int(H * .78) + 20, size=40)
+    if b.handle:
+        d.text((540, int(H * .78) + 120), "@" + b.handle, font=font("Bold", 34), fill=th.accent, anchor="ma")
+    foot(img, b, th)
+    return img
+
+
+def carousel(b, c, ths, rngs):
+    """ths: list of 1 theme (shared by all slides)."""
+    th, rng = ths[0], rngs[0]
+    slides = [car_cover(b, c["cover"], th, random.Random(th.seed))]
     body = c["slides"][:3]
     for i, s in enumerate(body, 1):
-        slides.append(car_slide(b, s, i, len(body) + 1))
-    slides.append(car_cta(b, c["cta"]))
-    return slides
+        slides.append(car_slide(b, s, i, len(body) + 1, th, random.Random(th.seed + i)))
+    slides.append(car_cta(b, c["cta"], th, random.Random(th.seed + 9)))
+    return [s.convert("RGB") for s in slides]
