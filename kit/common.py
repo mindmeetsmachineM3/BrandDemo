@@ -29,7 +29,20 @@ class Brand:
             self.d = json.loads(manual.read_text(encoding="utf-8"))
         elif brief.exists() and brief.read_text(encoding="utf-8").strip():
             from .profile import build_profile
-            self.d = build_profile(self.dir, brief.read_text(encoding="utf-8"))
+            import hashlib
+            text = brief.read_text(encoding="utf-8")
+            sig = hashlib.sha1((text + "|".join(f"{q.name}:{q.stat().st_size}" for q in sorted((self.dir / "assets").rglob("*")) if q.is_file())).encode()).hexdigest()
+            cache = ROOT / "output" / "profile_cache.json"
+            try:
+                c0 = json.loads(cache.read_text(encoding="utf-8"))
+            except Exception:
+                c0 = {}
+            if c0.get("sig") == sig:                                  # same brief and files: do not ask the AI twice
+                self.d = c0["profile"]
+            else:
+                self.d = build_profile(self.dir, text)
+                (ROOT / "output").mkdir(exist_ok=True)
+                cache.write_text(json.dumps({"sig": sig, "profile": self.d}, ensure_ascii=False), encoding="utf-8")
             (ROOT / "output").mkdir(exist_ok=True)
             (ROOT / "output" / "brand_profile_generated.json").write_text(json.dumps(self.d, ensure_ascii=False, indent=1), encoding="utf-8")
         else:
