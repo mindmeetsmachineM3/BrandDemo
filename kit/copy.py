@@ -50,6 +50,7 @@ RULES
 - The images show original illustrated people, never film/cartoon characters, celebrities or politicians; do not name any. No religious figures used for selling, no giveaways, no 'guaranteed' claims.
 - Short lines hit harder: respect the word limits, no filler, no emojis in on-image text, no hashtags in captions.
 - 'highlight' must be words copied exactly from the line it belongs to.
+- 'say' lines are read aloud by a voice: write them exactly as a real person would say them in the brand language (Hinglish = Hindi in Latin letters mixed with simple English, short, chatty, with small natural fillers like 'arre', 'dekho', 'sach mein' when it fits), no symbols, no hashtags, no emojis, say phone numbers as separate digits with commas.
 - 'products' arrays must contain only these ids: {ids}.
 - Captions: 3-5 short lines, first line is a hook, end with a call to action; emojis allowed in captions.
 - Obey the brand's own do/dont lists and extra requirements.
