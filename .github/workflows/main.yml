@@ -51,6 +51,8 @@ jobs:
       - name: Build demo
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SARVAM_API_KEY: ${{ secrets.SARVAM_API_KEY }}
+          VOICE_GENDER: ${{ vars.VOICE_GENDER }}
           ELEVEN_API_KEY: ${{ secrets.ELEVEN_API_KEY }}
           ELEVEN_VOICE: ${{ secrets.ELEVEN_VOICE }}
         run: |
