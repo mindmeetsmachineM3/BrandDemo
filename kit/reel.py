@@ -44,20 +44,9 @@ def dur(p):
     return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3)) if m else 0.0
 
 
-def voice_clip(text, b, out, provider):
-    if provider == "edge":
-        import edge_tts
-        v = os.getenv("EDGE_VOICE") or EDGE.get(b.lang, EDGE["english"])[0]
-        asyncio.run(edge_tts.Communicate(text, v, rate="+6%").save(str(out)))
-    elif provider == "elevenlabs":
-        import requests
-        vid, key = os.environ["ELEVEN_VOICE"], os.environ["ELEVEN_API_KEY"]
-        r = requests.post(f"https://api.elevenlabs.io/v1/text-to-speech/{vid}?output_format=mp3_44100_128", headers={"xi-api-key": key},
-                          json={"text": text, "model_id": os.getenv("ELEVEN_MODEL") or "eleven_multilingual_v2"}, timeout=90)
-        r.raise_for_status()
-        Path(out).write_bytes(r.content)
-    else:
-        raise RuntimeError("unknown voice provider " + provider)
+def voice_clip(text, b, out, providers):
+    from . import voice as V
+    return V.speak(text, b.lang, out, providers)
 
 
 PATTERNS_BY_SCENE = [None, "sunburst", "dots", "stripes", "blobs"]
@@ -202,8 +191,8 @@ def frame(b, th, S, t, T, n, logo_chip):
 
 
 def build_reel(b, reel, out_path, th, voice="auto", scene_min=3.0):
-    if voice == "auto":
-        voice = "elevenlabs" if (os.getenv("ELEVEN_API_KEY") and os.getenv("ELEVEN_VOICE")) else "edge"
+    from . import voice as V
+    providers = V.chain(voice if voice != "none" else "auto")
     scenes = reel["scenes"]
     n = len(scenes)
     tmp = Path(tempfile.mkdtemp(prefix="reel_"))
@@ -217,7 +206,9 @@ def build_reel(b, reel, out_path, th, voice="auto", scene_min=3.0):
         if voice != "none" and sc.get("say"):
             try:
                 c = tmp / f"v{i}.mp3"
-                voice_clip(sc["say"], b, c, voice)
+                used, label = voice_clip(sc["say"], b, c, providers)
+                providers = [used] + [p for p in providers if p != used]       # keep the voice that worked, same voice for the whole Reel
+                voice = label
                 d_ = max(d_, dur(c) + .5)
                 clips.append((i, c))
             except Exception as ex:
