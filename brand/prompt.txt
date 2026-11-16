@@ -1,15 +1,16 @@
 EXAMPLE BRIEF (fictional brand). Replace everything below with your client's details, in plain words.
 
-Brand: Acme Paints. Instagram: @acmepaints. WhatsApp: +91 00000 00000.
-Tagline: "Colour your home with confidence."
-We sell interior wall paint and waterproof coating for walls and terraces to home owners and painters in Indian cities.
-Tone: warm, simple, helpful, short sentences. Write in English.
+Brand: SUPERPRO (construction adhesive, by Lavilife). Instagram: @superproofficial. WhatsApp to order: +91 90888 25554.
+Tagline: "Bonds that build India."
+We sell adhesives for everyday repairs, home decor and carpentry to home owners, carpenters, contractors and interior designers across India (strong in Kolkata, Bengal, Bihar, Jharkhand, UP and Gujarat).
+Tone: witty, warm, rooted in Indian life, short punchy lines. Write in Hinglish (Hindi in Latin letters mixed with simple English). Brand idea: "pakki pakad" (a firm grip). Lines like "Diye jalte rahein, rishte jude rahein." and "Kuch rishton ko glue ki zaroorat nahi hoti."
 
 Products (images are in assets/products):
-- Acme Wall Paint (wall_paint.png): smooth finish, easy to apply, wide choice of shades.
-- Acme Waterproof Coat (waterproof.png): helps protect walls and terraces against seepage, easy to apply, long-lasting coverage.
+- SUPERPRO PUR Adhesive (pur.png): moisture-curing polyurethane adhesive, next-gen technology, 500 gm bottle, strong bond for carpentry and construction work.
+- SUPERPRO Liquid Nail (liquid_nail.png): multi-purpose adhesive in a 310 ml cartridge, extreme strength, no drill and no nail needed, "Fix it. Don't replace it."
+- SUPERPRO Instalock (instalock.png): cyanoacrylate instant glue, 15 gm, sets in about 5 to 60 seconds, for small repairs like broken handles and toys. For adult use, keep out of children's reach.
 
-Offers: none right now. Do not mention any price or discount.
-Season: Diwali home makeover.
-Special request: mention that shade advice is available on WhatsApp.
-Do not use: cartoon characters, public figures, religious figures for selling.
+Offers: Diwali Super Combo of all three products at Rs 630 (MRP Rs 1,325), order on WhatsApp. Do not mention any other price or discount.
+Season: wedding season starts (Dev Uthani Ekadashi, 20 Nov): home makeovers, decor, quick fixes before guests arrive. Also the SUPERPRO Pro Club for carpenters (on WhatsApp).
+Special request: every product post must show a real use and a real benefit. Show the pack shot clearly.
+Do not use: cartoon or film characters, public figures, religious figures for selling. Religious greetings must stay respectful with no product puns. Do not claim waterproof, heat-proof or load-bearing numbers that are not listed above.
