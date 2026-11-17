@@ -47,7 +47,8 @@ def load_hist():
         return {"moods": [], "lines": []}
 
 
-def build(brand_dir=None, voice="auto", reel=True, offline=False, seed=None, chars="auto"):
+def build(brand_dir=None, voice="auto", reel=True, offline=False, seed=None, chars="auto", reel_style="auto"):
+    presenter_err = ""
     b = Brand(brand_dir)
     slug = b.slug
     stamp = time.strftime("%Y%m%d_%H%M")
@@ -92,7 +93,16 @@ def build(brand_dir=None, voice="auto", reel=True, offline=False, seed=None, cha
     look.append(f"Carousel: {ths[3].mood}, font {ths[3].font}, {ths[3].person['role'] if ths[3].chars == 'human' else 'blob mascot'}")
     reel_note = "not made"
     if reel:
-        total, reel_note = R.build_reel(b, copy["reel"], out / "reel.mp4", ths[4], voice=voice)
+        total, reel_note = None, None
+        if reel_style in ("auto", "presenter") and os.getenv("GEMINI_API_KEY") and not offline:
+            try:
+                from kit import presenter as PR
+                total, reel_note = PR.build(b, ths[4], copy["reel"], out / "reel.mp4")
+            except Exception as ex:
+                print("REALISTIC PRESENTER REEL FAILED, making the animated Reel instead:", str(ex)[:300], file=sys.stderr)
+                presenter_err = str(ex)[:200]
+        if total is None:
+            total, reel_note = R.build_reel(b, copy["reel"], out / "reel.mp4", ths[4], voice=voice)
         reel_note = f"{total:.0f}s, {reel_note}"
     look.append(f"Reel: {ths[4].mood}, font {ths[4].font}, {ths[4].person['role'] if ths[4].chars == 'human' else 'blob mascot'}")
     hist["moods"] = (hist["moods"] + [t.mood for t in ths])[-30:]
@@ -108,6 +118,11 @@ def build(brand_dir=None, voice="auto", reel=True, offline=False, seed=None, cha
     warns = C.checks(copy, b)
     note = [f"CHECK BEFORE SENDING THIS DEMO TO {b.name.upper()}", "", f"Copy: {how}", f"Reel: {reel_note}", ""]
     note += warns or ["No automatic warnings."]
+    from kit import photo as _ph
+    if _ph.FAILED:
+        note += ["", "WARNING: realistic photo people could NOT be generated (" + _ph.FAILED[0][:120] + "), so the posts show ILLUSTRATED people. Fix the Gemini image access and run again before sending."]
+    if presenter_err:
+        note += ["", "WARNING: the realistic talking-person Reel failed (" + presenter_err + "), so you got the animated Reel. Fix the video access and run again before sending."]
     note += ["", "Always check by eye: logo and colours, spelling (especially Hindi, Bengali, Marathi), phone number, product image quality,",
              "every claim and number against what the client gave you. This is a demo: do not post it on the client's page without their approval.",
              "Use the client's logo and product images only for this client."]
@@ -135,6 +150,7 @@ def main():
     bd.add_argument("--brand", default=None)
     bd.add_argument("--voice", default="auto", choices=["auto", "none", "edge", "elevenlabs"], help="auto = ElevenLabs if keys exist, else free edge voice")
     bd.add_argument("--no-reel", action="store_true")
+    bd.add_argument("--reel-style", default="auto", choices=["auto", "presenter", "animated"], help="presenter = realistic AI person speaking (Gemini Omni video); animated = graphics Reel; auto = presenter when the key allows")
     bd.add_argument("--offline", action="store_true")
     bd.add_argument("--seed", type=int, default=None, help="repeat an earlier look (printed in the log)")
     bd.add_argument("--chars", default="auto", choices=["auto", "photo", "human", "blob", "mix"], help="auto = photo-real AI people when GEMINI_API_KEY exists, else illustrated people; photo; human = illustrated; blob; mix")
@@ -145,7 +161,7 @@ def main():
         print(f"Brand: {b.name}  ({len(b.products)} products)")
         print("\n".join("  - " + p for p in probs) if probs else "Everything needed is there.")
     else:
-        build(a.brand, a.voice, not a.no_reel, a.offline, a.seed, a.chars)
+        build(a.brand, a.voice, not a.no_reel, a.offline, a.seed, a.chars, a.reel_style)
 
 
 if __name__ == "__main__":
