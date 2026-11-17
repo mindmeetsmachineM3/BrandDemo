@@ -24,6 +24,11 @@ on:
       seed:
         description: "Optional number to repeat an earlier look (leave empty for a fresh look every time)"
         default: ""
+      reel_style:
+        description: "Reel: presenter (realistic AI person speaking), animated (graphics), auto"
+        type: choice
+        default: auto
+        options: [auto, presenter, animated]
       no_reel:
         description: "Skip the Reel (faster)"
         type: boolean
@@ -60,7 +65,7 @@ jobs:
           [ "${{ inputs.offline }}" = "true" ] && ARGS="$ARGS --offline"
           [ "${{ inputs.no_reel }}" = "true" ] && ARGS="$ARGS --no-reel"
           [ -n "${{ inputs.seed }}" ] && ARGS="$ARGS --seed ${{ inputs.seed }}"
-          python demo.py build --brand "${{ inputs.brand }}" --voice "${{ inputs.voice }}" --chars "${{ inputs.chars }}" $ARGS
+          python demo.py build --brand "${{ inputs.brand }}" --voice "${{ inputs.voice }}" --chars "${{ inputs.chars }}" --reel-style "${{ inputs.reel_style }}" $ARGS
       - uses: actions/upload-artifact@v4
         with:
           name: brand-demo
